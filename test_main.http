@@ -1,0 +1,20 @@
+POST http://127.0.0.1:8000/auth/signup/ HTTP/1.1
+Content-Type: application/json
+{
+    "username": "test",
+    "password": "test"
+}
+
+###
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:8000/
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/hello/User
+Accept: application/json
+
+###
+
