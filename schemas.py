@@ -39,3 +39,21 @@ class LoginModel(BaseModel):
     #             "password": "testSecret"
     #         }
     #     }
+
+
+class OrderModel(BaseModel):
+    id: Optional[int]
+    quantity: Optional[int]
+    order_status: Optional[str] = "pending"
+    pizza_sizes: Optional[str] = "small"
+
+    user_id: Optional[int]
+
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "example": {
+                "quantity": 2,
+                "pizza_sizes": "large"
+            }
+        }
