@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from fastapi_jwt_auth import AuthJWT
 from models import User, Order
-from schemas import OrderModel
+from schemas import OrderModel, OrderStatusModel
 from fastapi.exceptions import HTTPException
 from fastapi.encoders import jsonable_encoder
 from database import Session, engine
@@ -161,3 +161,61 @@ async def get_specific_order(order_id: int, Authorize: AuthJWT = Depends()):
     }
 
     return jsonable_encoder(response)
+
+
+@order_router.patch('/order/update/{order_id}', status_code=status.HTTP_200_OK)
+async def update_order_status(order_id: int, order: OrderStatusModel, Authorize: AuthJWT = Depends()):
+    try:
+        Authorize.jwt_required()
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Token")
+
+    username = Authorize.get_jwt_subject()
+
+    current_user = session.query(User).filter(User.username == username).first()
+
+    if current_user.is_staff:
+        order_to_update = session.query(Order).filter(Order.id == order_id).first()
+
+        if order_to_update is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Order not found")
+
+        order_to_update.order_status = order.order_status
+        order_to_update.pizza_sizes = order.pizza_sizes
+
+
+        session.commit()
+
+        response = {
+            "id": order_to_update.id,
+            "pizza_sizes": order_to_update.pizza_sizes,
+            "quantity": order_to_update.quantity,
+            "order_status": order_to_update.order_status,
+        }
+
+        return jsonable_encoder(response)
+
+
+@order_router.delete('/order/delete/{order_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_order(order_id: int, Authorize: AuthJWT = Depends()):
+    try:
+        Authorize.jwt_required()
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Token")
+
+    username = Authorize.get_jwt_subject()
+
+    current_user = session.query(User).filter(User.username == username).first()
+
+    if current_user.is_staff:
+        order_to_delete = session.query(Order).filter(Order.id == order_id).first()
+
+        if order_to_delete is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Order not found")
+
+        session.delete(order_to_delete)
+        session.commit()
+
+        return {"message": "Order deleted successfully", "Order: ": order_to_delete}
