@@ -18,6 +18,14 @@ session = Session(bind=engine)
 
 @auth_router.get("/")
 async def get_auth(Authorize: AuthJWT = Depends()):
+
+    """
+    This endpoint is used to check if the user is logged in.
+
+    :param Authorize:
+    :return:
+    """
+
     try:
         Authorize.jwt_required()
 
@@ -30,6 +38,21 @@ async def get_auth(Authorize: AuthJWT = Depends()):
 
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: SignUpModel):
+
+    """
+    This endpoint is used to create a new user.
+    - This requires the following fields:
+        - username: str
+        - password: str
+        - email: str
+        - is_staff: bool
+        - is_active: bool
+    - The password is hashed using the werkzeug security module.
+
+    :param user:
+    :return: token and user data if successful or error message
+    """
+
     db_email = session.query(User.email).filter(User.email == user.email).first()
 
     if db_email:
@@ -59,6 +82,19 @@ async def signup(user: SignUpModel):
 
 @auth_router.post("/login", status_code=status.HTTP_200_OK)
 async def login(user: LoginModel, Authorize: AuthJWT = Depends()):
+
+    """
+    This endpoint is used to login a user.
+    - This requires the following fields:
+        - username: str
+        - password: str
+    - The password is hashed using the werkzeug security module.
+
+    :param user:
+    :param Authorize:
+    :return: token and user data if successful
+    """
+
     db_user = session.query(User).filter(User.username == user.username).first()
 
     if db_user and check_password_hash(db_user.password_hash, user.password):
@@ -80,6 +116,18 @@ async def login(user: LoginModel, Authorize: AuthJWT = Depends()):
 
 @auth_router.get("/refresh", status_code=status.HTTP_200_OK)
 async def refresh_token(Authorize: AuthJWT = Depends()):
+
+    """
+    This endpoint is used to refresh a user's token.
+    - This requires the following fields:
+        - refresh_token: str
+    - The refresh token is hashed using the werkzeug security module.
+
+    :param Authorize: :return: new access token and refresh token if successful or error message if not successful or
+    expired token or invalid token is provided by user in request header or request body or request query parameters.
+
+    """
+
     try:
         Authorize.jwt_refresh_token_required()
 
